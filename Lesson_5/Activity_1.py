@@ -28,8 +28,6 @@ def load_data(file_path=path+"/imdb_top_1000.csv"): # path to your dataset file
 
 movies_df = load_data()
 
-print(movies_df[movies_df['Genre'].str.contains('Crime', case=False, na=False)])
-
 # List all unique genres
 def list_genres(df):
     genres = set()
@@ -48,9 +46,11 @@ def recommend_movies(genre=None, mood=None, rating=None, top_n=5):
 
     # creating a filtered movies list where genre and rating is user selected
     if genre:
-        filtered_list = filtered_list[filtered_list['Genre'].str.contains(genre, case=False, na=False)]
+        genre_list = filtered_list['Genre'].str.contains(genre, case=False, na=False)
+        filtered_list = filtered_list[genre_list]
     if rating:
-        filtered_list = filtered_list[filtered_list['IMDB_Rating'] >= rating]
+        rating_list = filtered_list['IMDB_Rating'] >= rating
+        filtered_list = filtered_list[rating_list]
 
     # shuffles
     filtered_list = filtered_list.sample(frac=1).reset_index(drop=True)  # Randomize the order
@@ -77,7 +77,7 @@ def recommend_movies(genre=None, mood=None, rating=None, top_n=5):
 # Display recommendations
 # -------------------------------
 def display_recommendations(recs, name):
-    print(Fore.YELLOW + f"\n🎬 AI-Analyzed Movie Recommendations for {name}:")
+    print(Fore.CYAN + f"\n🎬 AI-Analyzed Movie Recommendations for {name}:")
     for idx, (title, polarity) in enumerate(recs, start=1):
         sentiment = "Positive 😊" if polarity > 0 else "Negative 😞" if polarity < 0 else "Neutral 😐"
         print(f"{Fore.CYAN}{idx}. {title} (Polarity: {polarity:.2f}, {sentiment})")
@@ -105,9 +105,10 @@ def handle_ai(name):
     # Get genre input
     while True:
         genre_input = input(Fore.YELLOW + "\nEnter genre number or name: ").strip()
-        if genre_input.isdigit() and 1 <= int(genre_input) <= len(genres):
-            genre = genres[int(genre_input) - 1]
-            break
+        if genre_input.isdigit():
+            if int(genre_input) in range(1, len(genres) + 1):
+                genre = genres[int(genre_input) - 1]
+                break
         elif genre_input.title() in genres:
             genre = genre_input.title()
             break
@@ -117,7 +118,7 @@ def handle_ai(name):
     mood = input(Fore.YELLOW + "How do you feel today? (Describe your mood): ").strip()
 
     # Processing animation while analyzing mood
-    print(Fore.BLUE + "\nAnalyzing mood", end="", flush=True)
+    print(Fore.YELLOW + "\nAnalyzing mood", end="", flush=True)
     processing_animation()
     polarity = TextBlob(mood).sentiment.polarity
     mood_desc = "positive 😊" if polarity > 0 else "negative 😞" if polarity < 0 else "neutral 😐"
@@ -125,7 +126,7 @@ def handle_ai(name):
 
     # Get rating input
     while True:
-        rating_input = input(Fore.YELLOW + "Enter minimum IMDB rating (7.6–9.3) or 'skip': ").strip()
+        rating_input = input(Fore.YELLOW + "Enter IMDB rating (7.6–9.3) or 'skip': ").strip()
         if rating_input.lower() == 'skip':
             rating = None
             break
@@ -149,7 +150,7 @@ def handle_ai(name):
 
     # Ask if user wants more recommendations
     while True:
-        action = input(Fore.YELLOW + "\nWould you like more recommendations? (yes/no): ").strip().lower()
+        action = input(Fore.CYAN + "\nWould you like more recommendations? (yes/no): ").strip().lower()
         if action == 'no':
             print(Fore.GREEN + f"\nEnjoy your movie picks, {name}! 🎬🍿\n")
             break
@@ -167,7 +168,7 @@ def handle_ai(name):
 # -------------------------------
 def main():
     print(Fore.BLUE + "🎥 Welcome to your Personal Movie Recommendation Assistant! 🎥\n")
-    name = input(Fore.YELLOW + "What's your name? ").strip()
+    name = input(Fore.CYAN + "What's your name? ").strip()
     print(f"\n{Fore.GREEN}Great to meet you, {name}!\n")
     handle_ai(name)
 
